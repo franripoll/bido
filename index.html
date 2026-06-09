@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#1a1a1a" />
   <meta name="description" content="Bidó — guarda tus monedas de 1€" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -16,15 +16,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #faf9f7;
+      --bg: #ece9e3;
       --bg-card: #ffffff;
-      --bg-secondary: #f2f0ec;
-      --bg-tertiary: #e8e5df;
+      --bg-secondary: #e4e0d8;
+      --bg-tertiary: #d8d4cc;
       --text-primary: #1a1a1a;
       --text-secondary: #6b6760;
       --text-tertiary: #a09d98;
-      --border: rgba(0,0,0,0.10);
-      --border-hover: rgba(0,0,0,0.20);
+      --border: rgba(0,0,0,0.14);
+      --border-hover: rgba(0,0,0,0.28);
       --gold: #B87C1A;
       --gold-light: #F5E6C3;
       --gold-border: #C9A84C;
@@ -34,9 +34,6 @@
       --blue: #2563a8;
       --blue-bg: #eef4fc;
       --blue-border: rgba(37,99,168,0.30);
-      --green: #1e7e3e;
-      --green-bg: #eef7f1;
-      --green-border: rgba(30,126,62,0.30);
       --green: #1e7e3e;
       --green-bg: #eef7f1;
       --green-border: rgba(30,126,62,0.30);
@@ -79,7 +76,7 @@
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
     }
-    body { display: flex; flex-direction: column; min-height: 100dvh; }
+    body { display: flex; flex-direction: column; min-height: 100dvh; touch-action: manipulation; }
 
     /* ── Header ── */
     .app-header {
