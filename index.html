@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="description" content="Bidó — guarda tus monedas de 1€" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bidó" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Bidó</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f7;
+      --bg-card: #ffffff;
+      --bg-secondary: #f2f0ec;
+      --bg-tertiary: #e8e5df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6760;
+      --text-tertiary: #a09d98;
+      --border: rgba(0,0,0,0.10);
+      --border-hover: rgba(0,0,0,0.20);
+      --gold: #B87C1A;
+      --gold-light: #F5E6C3;
+      --gold-border: #C9A84C;
+      --danger: #c0392b;
+      --danger-bg: #fdf0ee;
+      --danger-border: rgba(192,57,43,0.35);
+      --blue: #2563a8;
+      --blue-bg: #eef4fc;
+      --blue-border: rgba(37,99,168,0.30);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --bg-card: #1e1d1a;
+        --bg-secondary: #252320;
+        --bg-tertiary: #2e2c28;
+        --text-primary: #f0ede8;
+        --text-secondary: #9a9690;
+        --text-tertiary: #5a5753;
+        --border: rgba(255,255,255,0.10);
+        --border-hover: rgba(255,255,255,0.20);
+        --gold: #E0A82E;
+        --gold-light: #3a2f10;
+        --gold-border: #8B6914;
+        --danger: #e74c3c;
+        --danger-bg: #2a1510;
+        --danger-border: rgba(231,76,60,0.35);
+        --blue: #6ba3d6;
+        --blue-bg: #0f1e30;
+        --blue-border: rgba(107,163,214,0.30);
+      }
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    body { display: flex; flex-direction: column; min-height: 100dvh; }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--bg-card);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 1.25rem;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .app-title {
+      font-size: 20px; font-weight: 600; letter-spacing: -0.3px;
+      color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+    }
+    .header-actions { display: flex; gap: 6px; }
+    .header-btn {
+      height: 34px; padding: 0 12px;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px; font-family: var(--font);
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .header-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; flex-shrink: 0; }
+    .header-btn:hover { background: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-hover); }
+    .header-btn.btn-retirada:hover { color: var(--danger); border-color: var(--danger-border); background: var(--danger-bg); }
+    .header-btn.btn-inicial:hover { color: var(--blue); border-color: var(--blue-border); background: var(--blue-bg); }
+
+    /* ── Main ── */
+    .main {
+      flex: 1; padding: 1.25rem; max-width: 600px; width: 100%; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 1.25rem;
+      padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-card {
+      background: var(--bg-secondary); border-radius: var(--radius-md);
+      padding: 0.9rem 0.75rem; text-align: center;
+    }
+    .stat-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: 22px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+    .stat-value.gold { color: var(--gold); }
+
+    /* ── Add card ── */
+    .add-card {
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+    }
+    .qty-area { display: flex; flex-direction: column; gap: 10px; }
+    .qty-label { font-size: 12px; color: var(--text-secondary); }
+    .qty-row { display: flex; align-items: center; gap: 16px; }
+    .qty-btn {
+      width: 44px; height: 44px;
+      border: 0.5px solid var(--border-hover); border-radius: var(--radius-sm);
+      background: var(--bg-secondary); color: var(--text-primary);
+      font-size: 24px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, transform 0.08s;
+      -webkit-tap-highlight-color: transparent; user-select: none;
+    }
+    .qty-btn:hover { background: var(--bg-tertiary); }
+    .qty-btn:active { transform: scale(0.92); }
+    .qty-display {
+      width: 60px; height: 44px; border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm); background: var(--bg);
+      color: var(--text-primary); text-align: center;
+      font-size: 20px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px;
+    }
+    .right-area { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+    .today-label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+    .today-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; flex-shrink: 0; }
+    .btn-save {
+      height: 52px; padding: 0 28px;
+      background: var(--bg-card); border: 0.5px solid var(--border-hover);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-size: 16px; font-weight: 500; font-family: var(--font);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+      -webkit-tap-highlight-color: transparent; white-space: nowrap;
+    }
+    .btn-save svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
+    .btn-save:hover { background: var(--bg-secondary); }
+    .btn-save:active { transform: scale(0.97); }
+    .btn-save.saved { border-color: var(--gold-border); color: var(--gold); }
+
+    /* ── Modal overlay ── */
+    .overlay {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.45);
+      align-items: flex-end; justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg-card); width: 100%; max-width: 600px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+    .modal-close {
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border); background: transparent;
+      color: var(--text-tertiary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .modal-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+    .modal-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-label { font-size: 12px; color: var(--text-secondary); }
+    .input-row { display: flex; align-items: center; gap: 10px; }
+    .amount-input {
+      flex: 1; height: 48px;
+      border: 0.5px solid var(--border-hover); border-radius: var(--radius-sm);
+      background: var(--bg); color: var(--text-primary);
+      font-size: 20px; font-weight: 600; font-family: var(--font);
+      padding: 0 14px; letter-spacing: -0.5px;
+      -webkit-appearance: none;
+    }
+    .amount-input:focus { outline: none; border-color: var(--gold-border); }
+    .amount-suffix { font-size: 18px; color: var(--text-secondary); font-weight: 500; }
+
+    .btn-modal-action {
+      height: 50px; width: 100%;
+      border-radius: var(--radius-sm); border: none;
+      font-size: 16px; font-weight: 600; font-family: var(--font);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.12s, transform 0.08s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-modal-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
+    .btn-modal-action:active { transform: scale(0.98); }
+    .btn-modal-action.action-blue { background: var(--blue); color: #fff; }
+    .btn-modal-action.action-danger { background: var(--danger); color: #fff; }
+    .btn-modal-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── List ── */
+    .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .filter-label { font-size: 13px; color: var(--text-secondary); }
+    select {
+      height: 32px; border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-card); color: var(--text-primary);
+      font-size: 13px; padding: 0 8px; min-width: 120px;
+      font-family: var(--font); cursor: pointer;
+    }
+    .entry-list { display: flex; flex-direction: column; gap: 6px; }
+    .group-header {
+      font-size: 11px; color: var(--text-tertiary);
+      padding: 12px 2px 6px; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+
+    .entry {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      transition: border-color 0.12s;
+    }
+    .entry:hover { border-color: var(--border-hover); }
+
+    /* entry coin / icon */
+    .entry-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      flex-shrink: 0; position: relative; letter-spacing: -0.3px;
+    }
+    .entry-icon.type-deposit {
+      background: var(--gold-light); border: 1.5px solid var(--gold-border); color: var(--gold);
+    }
+    .entry-icon.type-withdrawal {
+      background: var(--danger-bg); border: 1.5px solid var(--danger-border); color: var(--danger);
+    }
+    .entry-icon.type-initial {
+      background: var(--blue-bg); border: 1.5px solid var(--blue-border); color: var(--blue);
+    }
+    .entry-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+    .entry-badge {
+      position: absolute; top: -5px; right: -8px;
+      background: var(--gold-border); color: #fff;
+      font-size: 10px; font-weight: 600;
+      padding: 1px 5px; border-radius: 8px;
+      line-height: 1.5; min-width: 18px; text-align: center;
+    }
+
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-date { font-size: 14px; color: var(--text-primary); }
+    .entry-sublabel { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+
+    .entry-amount { font-size: 15px; font-weight: 600; flex-shrink: 0; letter-spacing: -0.3px; }
+    .entry-amount.positive { color: var(--text-primary); }
+    .entry-amount.negative { color: var(--danger); }
+    .entry-amount.initial  { color: var(--blue); }
+
+    .entry-delete {
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border); background: transparent;
+      color: var(--text-tertiary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .entry-delete svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+    .entry-delete:hover { border-color: var(--danger-border); color: var(--danger); background: var(--danger-bg); }
+
+    .empty {
+      text-align: center; padding: 3rem 1rem;
+      color: var(--text-tertiary); font-size: 14px; line-height: 1.7;
+    }
+    .empty-icon { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.35; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-title">🪙 Bidó</div>
+    <div class="header-actions">
+      <button class="header-btn btn-inicial" id="btn-open-inicial" aria-label="Añadir saldo inicial">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Saldo inicial
+      </button>
+      <button class="header-btn btn-retirada" id="btn-open-retirada" aria-label="Registrar retirada">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+        Retirada
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total</div>
+        <div class="stat-value gold" id="stat-total">0 €</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Monedas</div>
+        <div class="stat-value" id="stat-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Este mes</div>
+        <div class="stat-value" id="stat-month">0 €</div>
+      </div>
+    </div>
+
+    <div class="add-card">
+      <div class="qty-area">
+        <div class="qty-label">¿Cuántas guardas hoy?</div>
+        <div class="qty-row">
+          <button class="qty-btn" id="btn-minus" aria-label="Reducir cantidad">−</button>
+          <div class="qty-display" id="qty-display" aria-live="polite">1</div>
+          <button class="qty-btn" id="btn-plus" aria-label="Aumentar cantidad">+</button>
+        </div>
+      </div>
+      <div class="right-area">
+        <div class="today-label">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="today-str">—</span>
+        </div>
+        <button class="btn-save" id="btn-save">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+
+    <div class="list-section">
+      <div class="filter-row">
+        <span class="filter-label">Año:</span>
+        <select id="filter-year"><option value="all">Todos</option></select>
+      </div>
+      <div class="entry-list" id="entry-list"></div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Saldo inicial -->
+  <div class="overlay" id="overlay-inicial" role="dialog" aria-modal="true" aria-labelledby="modal-inicial-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-inicial-title">Saldo inicial</div>
+        <button class="modal-close" id="btn-close-inicial" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="modal-desc">¿Ya tenías monedas guardadas antes de usar Bidó? Introduce la cantidad para que el total sea correcto desde el principio.</p>
+      <div class="input-group">
+        <div class="input-label">Cantidad en euros</div>
+        <div class="input-row">
+          <input class="amount-input" type="number" id="input-inicial" min="1" max="99999" placeholder="0" />
+          <span class="amount-suffix">€</span>
+        </div>
+      </div>
+      <button class="btn-modal-action action-blue" id="btn-confirm-inicial">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Añadir saldo inicial
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Retirada -->
+  <div class="overlay" id="overlay-retirada" role="dialog" aria-modal="true" aria-labelledby="modal-retirada-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-retirada-title">Retirada</div>
+        <button class="modal-close" id="btn-close-retirada" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="modal-desc">Registra cuando vacíes o retires parte del bidó. Se descontará del total y quedará anotado en el historial.</p>
+      <div class="input-group">
+        <div class="input-label">Cantidad retirada</div>
+        <div class="input-row">
+          <input class="amount-input" type="number" id="input-retirada" min="1" max="99999" placeholder="0" />
+          <span class="amount-suffix">€</span>
+        </div>
+      </div>
+      <button class="btn-modal-action action-danger" id="btn-confirm-retirada">
+        <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+        Registrar retirada
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'bido-coins-v1';
+    let coins = [];
+    let qty = 1;
+
+    const qtyDisplay   = document.getElementById('qty-display');
+    const entryList    = document.getElementById('entry-list');
+    const filterYear   = document.getElementById('filter-year');
+    const btnSave      = document.getElementById('btn-save');
+
+    const now      = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const MONTHS   = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const DAYS     = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+    document.getElementById('today-str').textContent =
+      DAYS[now.getDay()] + ' ' + now.getDate() + ' de ' + MONTHS[now.getMonth()];
+
+    // ── Qty controls ──
+    document.getElementById('btn-minus').addEventListener('click', () => {
+      if (qty > 1) { qty--; qtyDisplay.textContent = qty; }
+    });
+    document.getElementById('btn-plus').addEventListener('click', () => {
+      if (qty < 999) { qty++; qtyDisplay.textContent = qty; }
+    });
+    btnSave.addEventListener('click', addDeposit);
+    filterYear.addEventListener('change', render);
+
+    // ── Modal helpers ──
+    function openModal(id) {
+      document.getElementById('overlay-' + id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById('overlay-' + id).classList.remove('open');
+    }
+
+    document.getElementById('btn-open-inicial').addEventListener('click', () => {
+      document.getElementById('input-inicial').value = '';
+      openModal('inicial');
+      setTimeout(() => document.getElementById('input-inicial').focus(), 50);
+    });
+    document.getElementById('btn-close-inicial').addEventListener('click', () => closeModal('inicial'));
+    document.getElementById('overlay-inicial').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal('inicial');
+    });
+
+    document.getElementById('btn-open-retirada').addEventListener('click', () => {
+      document.getElementById('input-retirada').value = '';
+      openModal('retirada');
+      setTimeout(() => document.getElementById('input-retirada').focus(), 50);
+    });
+    document.getElementById('btn-close-retirada').addEventListener('click', () => closeModal('retirada'));
+    document.getElementById('overlay-retirada').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal('retirada');
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeModal('inicial'); closeModal('retirada'); }
+    });
+
+    // ── Storage ──
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) coins = JSON.parse(raw);
+      } catch(e) { coins = []; }
+      updateYearFilter();
+      render();
+    }
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(coins)); }
+      catch(e) { console.error('Error guardando:', e); }
+    }
+
+    // ── Actions ──
+    function addDeposit() {
+      coins.unshift({ id: Date.now(), date: todayStr, qty, type: 'deposit' });
+      save();
+      qty = 1; qtyDisplay.textContent = 1;
+      btnSave.classList.add('saved');
+      setTimeout(() => btnSave.classList.remove('saved'), 800);
+      updateYearFilter(); render();
+    }
+
+    document.getElementById('btn-confirm-inicial').addEventListener('click', () => {
+      const val = parseInt(document.getElementById('input-inicial').value, 10);
+      if (!val || val < 1) return;
+      coins.push({ id: Date.now(), date: todayStr, qty: val, type: 'initial' });
+      coins.sort((a,b) => b.id - a.id);
+      save(); closeModal('inicial'); updateYearFilter(); render();
+    });
+
+    document.getElementById('btn-confirm-retirada').addEventListener('click', () => {
+      const val = parseInt(document.getElementById('input-retirada').value, 10);
+      if (!val || val < 1) return;
+      const total = coins.reduce((s,c) => s + (c.type === 'withdrawal' ? -c.qty : c.qty), 0);
+      if (val > total) {
+        alert('No puedes retirar más de lo que tienes (' + total + ' €).');
+        return;
+      }
+      coins.unshift({ id: Date.now(), date: todayStr, qty: val, type: 'withdrawal' });
+      save(); closeModal('retirada'); updateYearFilter(); render();
+    });
+
+    function deleteEntry(id) {
+      if (!confirm('¿Eliminar esta entrada?')) return;
+      coins = coins.filter(c => c.id !== id);
+      save(); updateYearFilter(); render();
+    }
+
+    // ── Helpers ──
+    function updateYearFilter() {
+      const years = [...new Set(coins.map(c => c.date.slice(0,4)))].sort((a,b) => b-a);
+      const current = filterYear.value;
+      filterYear.innerHTML = '<option value="all">Todos los años</option>';
+      years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === current) opt.selected = true;
+        filterYear.appendChild(opt);
+      });
+    }
+
+    function formatDate(dateStr) {
+      const [y,m,d] = dateStr.split('-');
+      const dt = new Date(+y, +m-1, +d);
+      return DAYS[dt.getDay()] + ', ' + (+d) + ' de ' + MONTHS[+m-1];
+    }
+
+    // ── Render ──
+    function render() {
+      const selectedYear = filterYear.value;
+      const filtered = selectedYear === 'all'
+        ? coins
+        : coins.filter(c => c.date.startsWith(selectedYear));
+
+      // Stats use all coins
+      const total = coins.reduce((s,c) => {
+        return c.type === 'withdrawal' ? s - c.qty : s + c.qty;
+      }, 0);
+      const depositCount = coins.filter(c => c.type === 'deposit').reduce((s,c) => s + c.qty, 0);
+      const thisMonth = todayStr.slice(0,7);
+      const monthNet = coins.filter(c => c.date.startsWith(thisMonth)).reduce((s,c) => {
+        return c.type === 'withdrawal' ? s - c.qty : s + c.qty;
+      }, 0);
+
+      document.getElementById('stat-total').textContent = total.toLocaleString('es-ES') + ' €';
+      document.getElementById('stat-count').textContent = depositCount.toLocaleString('es-ES');
+      document.getElementById('stat-month').textContent = (monthNet >= 0 ? '+' : '') + monthNet.toLocaleString('es-ES') + ' €';
+
+      if (filtered.length === 0) {
+        entryList.innerHTML = `<div class="empty"><span class="empty-icon">🪙</span>${
+          selectedYear === 'all'
+            ? 'Todavía no has guardado<br>ninguna moneda.'
+            : 'No hay movimientos en ' + selectedYear + '.'
+        }</div>`;
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(c => {
+        const month = c.date.slice(0,7);
+        if (!grouped[month]) grouped[month] = [];
+        grouped[month].push(c);
+      });
+
+      const TYPE_META = {
+        deposit:    { iconClass: 'type-deposit',    amountClass: 'positive', sign: '+', label: 'Ingreso',       badgeColor: 'var(--gold-border)' },
+        initial:    { iconClass: 'type-initial',    amountClass: 'initial',  sign: '+', label: 'Saldo inicial', badgeColor: 'var(--blue)' },
+        withdrawal: { iconClass: 'type-withdrawal', amountClass: 'negative', sign: '−', label: 'Retirada',      badgeColor: 'var(--danger)' },
+      };
+
+      const coinSVG = '<svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="8" font-weight="700">1€</text></svg>';
+      const walletSVG = '<svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>';
+      const plusSVG   = '<svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
+
+      function iconFor(type) {
+        if (type === 'withdrawal') return walletSVG;
+        if (type === 'initial')    return plusSVG;
+        return coinSVG;
+      }
+
+      let html = '';
+      Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(month => {
+        const [,m, y2] = month.match(/(\d+)-(\d+)/) || ['','',''];
+        const [yr, mo] = month.split('-');
+        const label = MONTHS[parseInt(mo,10)-1] + ' ' + yr;
+        const monthTotal = grouped[month].reduce((s,c) => c.type === 'withdrawal' ? s - c.qty : s + c.qty, 0);
+        html += `<div class="group-header">${label} &mdash; ${monthTotal >= 0 ? '+' : ''}${monthTotal} €</div>`;
+
+        grouped[month].forEach(entry => {
+          const meta = TYPE_META[entry.type] || TYPE_META.deposit;
+          const showBadge = entry.type === 'deposit' && entry.qty > 1;
+
+          html += `
+            <div class="entry">
+              <div class="entry-icon ${meta.iconClass}" aria-hidden="true">
+                ${iconFor(entry.type)}
+                ${showBadge ? `<span class="entry-badge">×${entry.qty}</span>` : ''}
+              </div>
+              <div class="entry-info">
+                <div class="entry-date">${formatDate(entry.date)}</div>
+                <div class="entry-sublabel">${meta.label}</div>
+              </div>
+              <div class="entry-amount ${meta.amountClass}">${meta.sign}${entry.qty} €</div>
+              <button class="entry-delete" onclick="deleteEntry(${entry.id})" aria-label="Eliminar entrada">
+                <svg viewBox="0 0 24 24" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>`;
+        });
+      });
+
+      entryList.innerHTML = html;
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
+    }
+
+    load();
+  </script>
+</body>
+</html>
