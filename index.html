@@ -34,6 +34,12 @@
       --blue: #2563a8;
       --blue-bg: #eef4fc;
       --blue-border: rgba(37,99,168,0.30);
+      --green: #1e7e3e;
+      --green-bg: #eef7f1;
+      --green-border: rgba(30,126,62,0.30);
+      --green: #1e7e3e;
+      --green-bg: #eef7f1;
+      --green-border: rgba(30,126,62,0.30);
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
@@ -60,6 +66,9 @@
         --blue: #6ba3d6;
         --blue-bg: #0f1e30;
         --blue-border: rgba(107,163,214,0.30);
+        --green: #4caf72;
+        --green-bg: #0c1f12;
+        --green-border: rgba(76,175,114,0.30);
       }
     }
 
@@ -102,6 +111,24 @@
     .header-btn:hover { background: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-hover); }
     .header-btn.btn-retirada:hover { color: var(--danger); border-color: var(--danger-border); background: var(--danger-bg); }
     .header-btn.btn-inicial:hover { color: var(--blue); border-color: var(--blue-border); background: var(--blue-bg); }
+    .header-btn.btn-backup:hover { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+    /* -- Import drop zone -- */
+    .drop-zone {
+      border: 1.5px dashed var(--border-hover); border-radius: var(--radius-sm);
+      padding: 1.5rem 1rem; text-align: center;
+      color: var(--text-secondary); font-size: 13px; line-height: 1.6;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--green); background: var(--green-bg); color: var(--green);
+    }
+    .drop-zone svg { width: 28px; height: 28px; stroke: currentColor; fill: none; margin-bottom: 8px; display: block; margin-inline: auto; }
+    .btn-modal-action.action-green { background: var(--green); color: #fff; }
+    .import-status { font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); display: none; }
+    .import-status.ok  { background: var(--green-bg); color: var(--green); border: 0.5px solid var(--green-border); display: block; }
+    .import-status.err { background: var(--danger-bg); color: var(--danger); border: 0.5px solid var(--danger-border); display: block; }
+    .backup-actions { display: flex; flex-direction: column; gap: 10px; }
 
     /* ── Main ── */
     .main {
@@ -309,6 +336,10 @@
         <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
         Retirada
       </button>
+      <button class="header-btn btn-backup" id="btn-open-backup" aria-label="Copia de seguridad">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Backup
+      </button>
     </div>
   </header>
 
@@ -408,6 +439,42 @@
     </div>
   </div>
 
+  <!-- Modal: Backup -->
+  <div class="overlay" id="overlay-backup" role="dialog" aria-modal="true" aria-labelledby="modal-backup-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-backup-title">Copia de seguridad</div>
+        <button class="modal-close" id="btn-close-backup" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="backup-actions">
+        <p class="modal-desc">Exporta tus datos a un fichero <strong>.json</strong> para guardarlos o moverlos a otro dispositivo.</p>
+        <button class="btn-modal-action action-green" id="btn-export">
+          <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar datos
+        </button>
+      </div>
+
+      <hr style="border:none; border-top: 0.5px solid var(--border);" />
+
+      <div class="backup-actions">
+        <p class="modal-desc">Importa un fichero exportado previamente. <strong>Los datos actuales se reemplazarán.</strong></p>
+        <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Seleccionar fichero de importación">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Arrastra un fichero .json aquí<br>o toca para seleccionarlo
+        </div>
+        <input type="file" id="input-import" accept=".json,application/json" style="display:none" />
+        <div class="import-status" id="import-status"></div>
+        <button class="btn-modal-action action-green" id="btn-import" disabled>
+          <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importar datos
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'bido-coins-v1';
     let coins = [];
@@ -466,7 +533,7 @@
 
     // Close on Escape
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { closeModal('inicial'); closeModal('retirada'); }
+      if (e.key === 'Escape') { closeModal('inicial'); closeModal('retirada'); closeModal('backup'); }
     });
 
     // ── Storage ──
@@ -623,6 +690,106 @@
 
       entryList.innerHTML = html;
     }
+
+    // ── Backup: Export ──
+    function exportData() {
+      const data = { version: 1, exported: new Date().toISOString(), coins };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateTag = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = 'bido-backup-' + dateTag + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Backup: Import ──
+    let importedData = null;
+
+    function validateImport(raw) {
+      try {
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data.coins)) throw new Error('Formato no válido');
+        for (const c of data.coins) {
+          if (!c.id || !c.date || !c.qty || !c.type) throw new Error('Datos incompletos');
+        }
+        return data.coins;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function handleImportFile(file) {
+      if (!file || !file.name.endsWith('.json')) {
+        showImportStatus('error', 'El fichero debe ser un .json exportado desde Bidó.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const parsed = validateImport(e.target.result);
+        if (!parsed) {
+          importedData = null;
+          document.getElementById('btn-import').disabled = true;
+          showImportStatus('error', 'El fichero no tiene el formato correcto.');
+        } else {
+          importedData = parsed;
+          document.getElementById('btn-import').disabled = false;
+          showImportStatus('ok', parsed.length + ' entradas listas para importar. Pulsa el botón para confirmar.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function showImportStatus(type, msg) {
+      const el = document.getElementById('import-status');
+      el.className = 'import-status ' + (type === 'ok' ? 'ok' : 'err');
+      el.textContent = msg;
+    }
+
+    // Backup modal controls
+    document.getElementById('btn-open-backup').addEventListener('click', () => {
+      importedData = null;
+      document.getElementById('btn-import').disabled = true;
+      document.getElementById('import-status').className = 'import-status';
+      document.getElementById('import-status').textContent = '';
+      openModal('backup');
+    });
+    document.getElementById('btn-close-backup').addEventListener('click', () => closeModal('backup'));
+    document.getElementById('overlay-backup').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal('backup');
+    });
+
+    document.getElementById('btn-export').addEventListener('click', exportData);
+
+    // Drop zone
+    const dropZone = document.getElementById('drop-zone');
+    const inputImport = document.getElementById('input-import');
+
+    dropZone.addEventListener('click', () => inputImport.click());
+    dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inputImport.click(); });
+    inputImport.addEventListener('change', e => { if (e.target.files[0]) handleImportFile(e.target.files[0]); });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      handleImportFile(e.dataTransfer.files[0]);
+    });
+
+    document.getElementById('btn-import').addEventListener('click', () => {
+      if (!importedData) return;
+      if (!confirm('Esto reemplazará todos tus datos actuales. ¿Continuar?')) return;
+      coins = importedData;
+      save();
+      importedData = null;
+      closeModal('backup');
+      updateYearFilter();
+      render();
+    });
+
+    // Close backup on Escape (add to existing handler)
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(console.error);
